@@ -23,7 +23,7 @@ jobs:
             -H "x-api-key: $API_KEY" \
             -H "content-type: application/json" \
             -d '{
-              "model": "claude-3-opus-20240229",
+              "model": "claude-3-sonnet-20240229",
               "messages": [{"role": "user", "content": "'"$PROMPT"'"}],
               "max_tokens": 500
             }')
