@@ -60,7 +60,7 @@ jobs:
             "greeting")
               RESPONSE="👋 Hello! I'm Claude, ready to assist with your autonomous driving safety engineering questions.
 
-**Available assistance:**
+Available assistance:
 - 🚗 Level 4 autonomous driving safety analysis
 - 🔍 Code review for safety-critical systems  
 - 📋 Safety requirement validation
@@ -70,15 +70,15 @@ jobs:
 How can I help you today?"
               ;;
             "safety_engineering")
-              RESPONSE="🛡️ **Safety Engineering Assistant Activated**
+              RESPONSE="🛡️ Safety Engineering Assistant Activated
 
 I see this relates to autonomous driving safety. As a specialized assistant for Level 4 systems, I can help with:
 
-**Issue Analysis:**
+Issue Analysis:
 - Title: \`$TITLE\`
 - Context: Safety-critical autonomous driving system
 
-**Recommended Actions:**
+Recommended Actions:
 1. 🔍 Perform hazard analysis (ISO 26262)
 2. 🧪 Define validation test scenarios
 3. 📋 Review safety requirements compliance
@@ -87,15 +87,15 @@ I see this relates to autonomous driving safety. As a specialized assistant for 
 Please provide more details about the specific safety concern or requirement you'd like me to analyze."
               ;;
             "bug_analysis")
-              RESPONSE="🐛 **Bug Analysis Mode**
+              RESPONSE="🐛 Bug Analysis Mode
 
 I'm analyzing this issue for safety implications in autonomous driving context:
 
-**Initial Assessment:**
+Initial Assessment:
 - Issue: \`$TITLE\`
 - Safety Classification: Pending analysis
 
-**Safety Engineering Checklist:**
+Safety Engineering Checklist:
 - [ ] ASIL (Automotive Safety Integrity Level) classification
 - [ ] Potential impact on vehicle safety functions
 - [ ] Verification and validation requirements
@@ -104,10 +104,10 @@ I'm analyzing this issue for safety implications in autonomous driving context:
 Would you like me to help classify this bug's safety criticality and suggest mitigation strategies?"
               ;;
             *)
-              RESPONSE="🤖 **Claude AI Assistant**
+              RESPONSE="🤖 Claude AI Assistant
 
 I'm here to help! I noticed you mentioned @claude in:
-**Issue:** \`$TITLE\`
+Issue: \`$TITLE\`
 
 As an AI assistant specialized in autonomous driving safety engineering, I can assist with:
 - Safety analysis and ISO 26262 compliance
@@ -184,17 +184,17 @@ Please let me know how I can help with this specific issue!"
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `🚨 **SAFETY ALERT** 🚨
+              body: `🚨 SAFETY ALERT 🚨
               
 This issue has been flagged as safety-critical for Level 4 autonomous driving systems.
 
-**Immediate Actions Required:**
+Immediate Actions Required:
 1. ⚠️ Safety team notification sent
 2. 🔍 Mandatory safety impact assessment
 3. 📋 ISO 26262 compliance review
 4. 🧪 Enhanced validation testing required
 
-**Safety Engineering Review Board:** Please prioritize this issue for immediate analysis.`
+Safety Engineering Review Board: Please prioritize this issue for immediate analysis.`
             });
             
             // Add high priority label
