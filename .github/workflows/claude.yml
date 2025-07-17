@@ -1,45 +1,12 @@
-name: Claude Reply Bot
+name: Trigger Test
 
 on:
   issue_comment:
     types: [created]
 
 jobs:
-  reply:
+  log:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for @claude mention
-        id: check
-        run: |
-          echo "COMMENT=${{ github.event.comment.body }}" >> $GITHUB_ENV
-          if [[ "${{ github.event.comment.body }}" != @claude* ]]; then
-            echo "Not a @claude comment. Skipping." 
-            exit 78  # exit code 78 = neutral, does not mark as failed
-          fi
-
-      - name: Install dependencies
-        run: sudo apt-get install -y jq gh
-
-      - name: Call Claude
-        env:
-          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          PROMPT="${COMMENT#@claude }"
-
-          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "x-api-key: $API_KEY" \
-            -H "content-type: application/json" \
-            -d '{
-              "model": "claude-3-sonnet-20240229",
-              "messages": [{"role": "user", "content": "'"$PROMPT"'"}],
-              "max_tokens": 400
-            }')
-
-          echo "$RESPONSE" > response.json
-          echo "REPLY=$(jq -r '.content[0].text' response.json)" >> $GITHUB_ENV
-
-      - name: Post reply to GitHub Issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue comment ${{ github.event.issue.number }} -b "$REPLY"
+      - name: Show the comment
+        run: echo "Comment was: ${{ github.event.comment.body }}"
