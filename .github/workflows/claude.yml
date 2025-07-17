@@ -25,7 +25,7 @@ jobs:
             -d '{
               "model": "claude-3-sonnet-20240229",
               "messages": [{"role": "user", "content": "'"$PROMPT"'"}],
-              "max_tokens": 500
+              "max_tokens": 400
             }')
 
           echo "$RESPONSE" > response.json
