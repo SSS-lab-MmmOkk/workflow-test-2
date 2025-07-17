@@ -1,47 +1,12 @@
-name: Claude Reply Bot
+name: Debug Claude Trigger
 
 on:
   issue_comment:
     types: [created]
 
 jobs:
-  reply:
+  debug:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check if comment starts with @claude
-        run: |
-          COMMENT="${{ github.event.comment.body }}"
-          if [[ "$COMMENT" != @claude* ]]; then
-            echo "Comment does not start with @claude, exiting."
-            exit 0
-          fi
-          echo "PROMPT=${COMMENT#@claude }" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq gh
-
-      - name: Call Claude API
-        env:
-          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "x-api-key: $API_KEY" \
-            -H "content-type: application/json" \
-            -d '{
-              "model": "claude-3-sonnet-20240229",
-              "messages": [{"role": "user", "content": "'"$PROMPT"'"}],
-              "max_tokens": 400
-            }')
-
-          echo "$RESPONSE" > response.json
-          jq '.' response.json
-
-          REPLY=$(jq -r '.content[0].text' response.json)
-          echo "REPLY=$REPLY" >> $GITHUB_ENV
-
-      - name: Post comment back to GitHub
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue comment ${{ github.event.issue.number }} -b "$REPLY"
+      - name: Show comment
+        run: echo "Comment: ${{ github.event.comment.body }}"
