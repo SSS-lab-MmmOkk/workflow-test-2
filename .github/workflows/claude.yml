@@ -13,169 +13,34 @@ jobs:
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      
-      - name: Extract Claude mention and context
-        id: extract_context
+      - name: Extract issue info
+        id: extract
         run: |
           if [ "${{ github.event_name }}" == "issues" ]; then
             BODY="${{ github.event.issue.body }}"
             ISSUE_NUMBER="${{ github.event.issue.number }}"
-            TITLE="${{ github.event.issue.title }}"
           else
             BODY="${{ github.event.comment.body }}"
             ISSUE_NUMBER="${{ github.event.issue.number }}"
-            TITLE="${{ github.event.issue.title }}"
           fi
           
           echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
           echo "body=$BODY" >> $GITHUB_OUTPUT
-          
-          # Check for specific patterns
-          if echo "$BODY" | grep -i "hello"; then
-            echo "response_type=greeting" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -i "safety\|autonomous\|level.*4\|自動運転\|安全"; then
-            echo "response_type=safety_engineering" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -i "bug\|error\|issue\|problem"; then
-            echo "response_type=bug_analysis" >> $GITHUB_OUTPUT
-          else
-            echo "response_type=general" >> $GITHUB_OUTPUT
-          fi
 
-      - name: Generate Claude Response
-        id: claude_response
+      - name: Generate response
+        id: response
         run: |
-          RESPONSE_TYPE="${{ steps.extract_context.outputs.response_type }}"
-          TITLE="${{ steps.extract_context.outputs.title }}"
-          BODY="${{ steps.extract_context.outputs.body }}"
+          BODY="${{ steps.extract.outputs.body }}"
           
-          case $RESPONSE_TYPE in
-            "greeting")
-              RESPONSE="👋 Hello! I'm Claude, ready to assist with your autonomous driving safety engineering questions.
-
-Available assistance:
-- 🚗 Level 4 autonomous driving safety analysis
-- 🔍 Code review for safety-critical systems  
-- 📋 Safety requirement validation
-- 🧪 Test case generation for edge scenarios
-- 📊 Risk assessment and FMEA support
-
-How can I help you today?"
-              ;;
-            "safety_engineering")
-              RESPONSE="🛡️ Safety Engineering Assistant Activated
-
-I see this relates to autonomous driving safety. As a specialized assistant for Level 4 systems, I can help with:
-
-Issue Analysis:
-- Title: \`$TITLE\`
-- Context: Safety-critical autonomous driving system
-
-Recommended Actions:
-1. 🔍 Perform hazard analysis (ISO 26262)
-2. 🧪 Define validation test scenarios
-3. 📋 Review safety requirements compliance
-4. 🚨 Assess functional safety implications
-
-Please provide more details about the specific safety concern or requirement you'd like me to analyze."
-              ;;
-            "bug_analysis")
-              RESPONSE="🐛 Bug Analysis Mode
-
-I'm analyzing this issue for safety implications in autonomous driving context:
-
-Initial Assessment:
-- Issue: \`$TITLE\`
-- Safety Classification: Pending analysis
-
-Safety Engineering Checklist:
-- [ ] ASIL (Automotive Safety Integrity Level) classification
-- [ ] Potential impact on vehicle safety functions
-- [ ] Verification and validation requirements
-- [ ] Regression testing scope
-
-Would you like me to help classify this bug's safety criticality and suggest mitigation strategies?"
-              ;;
-            *)
-              RESPONSE="🤖 Claude AI Assistant
-
-I'm here to help! I noticed you mentioned @claude in:
-Issue: \`$TITLE\`
-
-As an AI assistant specialized in autonomous driving safety engineering, I can assist with:
-- Safety analysis and ISO 26262 compliance
-- Code review for safety-critical systems
-- Test scenario generation  
-- Risk assessment
-
-Please let me know how I can help with this specific issue!"
-              ;;
-          esac
+          if echo "$BODY" | grep -i "hello"; then
+            RESPONSE="Hello! How can I help you?"
+          else
+            RESPONSE="I'm Claude. How can I assist you with this issue?"
+          fi
           
-          echo "response<<EOF" >> $GITHUB_OUTPUT
-          echo "$RESPONSE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "message=$RESPONSE" >> $GITHUB_OUTPUT
 
-      - name: Post Claude Response
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const response = `${{ steps.claude_response.outputs.response }}`;
-            
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ steps.extract_context.outputs.issue_number }},
-              body: response
-            });
-
-      - name: Add Labels Based on Context
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const responseType = "${{ steps.extract_context.outputs.response_type }}";
-            let labels = ['claude-assisted'];
-            
-            switch(responseType) {
-              case 'safety_engineering':
-                labels.push('safety-critical', 'autonomous-driving');
-                break;
-              case 'bug_analysis':
-                labels.push('needs-safety-review', 'bug');
-                break;
-              case 'greeting':
-                labels.push('question');
-                break;
-              default:
-                labels.push('needs-review');
-            }
-            
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ steps.extract_context.outputs.issue_number }},
-              labels: labels
-            });
-
-  # Optional: Safety-focused workflow for critical issues
-  safety_escalation:
-    runs-on: ubuntu-latest
-    if: |
-      contains(github.event.issue.title, 'CRITICAL') ||
-      contains(github.event.issue.title, 'SAFETY') ||
-      contains(github.event.issue.labels.*.name, 'safety-critical')
-    
-    steps:
-      - name: Notify Safety Team
+      - name: Post comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -183,24 +48,6 @@ Please let me know how I can help with this specific issue!"
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `🚨 SAFETY ALERT 🚨
-              
-This issue has been flagged as safety-critical for Level 4 autonomous driving systems.
-
-Immediate Actions Required:
-1. ⚠️ Safety team notification sent
-2. 🔍 Mandatory safety impact assessment
-3. 📋 ISO 26262 compliance review
-4. 🧪 Enhanced validation testing required
-
-Safety Engineering Review Board: Please prioritize this issue for immediate analysis.`
-            });
-            
-            // Add high priority label
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['priority-high', 'safety-escalation', 'requires-safety-board-review']
+              issue_number: ${{ steps.extract.outputs.issue_number }},
+              body: "${{ steps.response.outputs.message }}"
             });
