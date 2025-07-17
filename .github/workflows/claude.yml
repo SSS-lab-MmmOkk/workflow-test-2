@@ -9,4 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Show the comment
-        run: echo "Comment was: '${{ github.event.comment.body }}'"
+        run: |
+          echo "Comment was: '${{ github.event.comment.body }}'"
